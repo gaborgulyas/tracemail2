@@ -72,6 +72,7 @@ function Ip(attributes) {
     ////-
     if (res && statement.row.countryname) {
         this.CountryName = statement.row.countryname;
+        this.Code = statement.row.alpha3code;
         this.City = statement.row.city;
         this.Latitude = statement.row.latitude;
         this.Longitude = statement.row.longitude;
@@ -81,6 +82,7 @@ function Ip(attributes) {
         this.WarrantlessText = statement.row.warrantlesstext;
     } else {
         this.CountryName = "Reserved";
+        this.Code = '';
         this.City = '';
         this.Latitude = '';
         this.Longitude = '';

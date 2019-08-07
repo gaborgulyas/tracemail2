@@ -750,17 +750,19 @@
                 var centerlat = latmax/2 + latmin/2;
                 var centerlon = lonmax/2 + lonmin/2;
 
+                var dr = true;
+                var wr = true;
+
 
 
                 var map = new Datamap({
                     element: document.getElementById('map'),
 
                     fills: {
-                        defaultFill: '#f0af0a',
-                        Warrantless: '#FF0000',
-                        DataRet: '#FFFF00',
-                        Respected: '#00FF00',
-                        black: '#000000'
+                        defaultFill : '#acacac',
+                        defaultDot  : '#0000FF',
+                        sender      : '#00FFFF',
+                        receiver    : '#C200AB'
                     },
 
                     setProjection: function(element) {
@@ -771,6 +773,18 @@
 
                         var path = d3.geo.path().projection(projection);
                         return { path: path, projection: projection };
+                    },
+
+                    geographyConfig: {
+                        popupTemplate: function(geo, data) {
+                            return ['<div align="center" style="font-weight:bold" class = "hoverinfo">'+ data.country +"</div><hr/>"
+                            +'<div style="margin:5px;" class = "hoverinfo">'
+                            +"<table><tr><td>Data Retention:</td><td>"+(data.dr=="true"?"YES":"NO")+"</td></tr>"
+                            +"<tr><td>Warrantless Interception:</td><td>"+(data.wr=="true"?"YES":"NO")+"</td></tr></table>"
+                            +'</div>'
+                            +'<hr/><div style="margin:5px;font-size:smaller;font-style:italic;" class = "hoverinfo">Click on the country for details</div>'].join('');
+
+                        }
                     }
                 });
             </script>
@@ -870,6 +884,7 @@
     var defplinestroke=2.5;
     var bubblesString = String('map.bubbles([\n');
     var arcString = String('map.arc([\n');
+    var choroplethString = String('map.updateChoropleth({\n');
 
     var userAgent = navigator.userAgent.toLowerCase();
     // Figure out what browser is being used
@@ -892,7 +907,7 @@
     //***********************************************
     //GPS --> Pixel
     //***********************************************
-    /*	function getPicCooFromGPS(longitude,latitude)
+    	function getPicCooFromGPS(longitude,latitude)
         {
             var tmp= new Array();
             var origoX=379; //(0,0).x on map
@@ -1129,13 +1144,13 @@
             }
             */
     ////
-    //	}
+    	}
     //*******************END*************************
 
     //***********************************************
 
     //***********************************************
-    /*	function countryClick(e)
+    	function countryClick(e)
         {
             if(!dragging.on)
             {
@@ -1181,12 +1196,12 @@
             }
             return c;
         }
-    */	//*******************END*************************
+    	//*******************END*************************
 
     //***********************************************
 
     //***********************************************
-    /*	function notInCountryList(countryname)
+    	function notInCountryList(countryname)
         {
             for(var j=0;j<CountryList.length;j++)
             {
@@ -1195,11 +1210,11 @@
             return true;
         }
         //*******************END*************************
-    */
+
 
 
     //***********************************************
-    /*	function drag_ondown(e)
+    	function drag_ondown(e)
         {
             //Storing current mouse coordinates to calculate the dragging diference later
             dragging.x=e.clientX;
@@ -1251,8 +1266,8 @@
             }
         }
         //*******************END*************************
-    */
-    /*	function Rank(ri)
+
+    	function Rank(ri)
         {
             if(ri.Warrantless==true)
             {
@@ -1270,11 +1285,11 @@
                 ri.ClassificationRank=2;
             }
         }
-    */
-    //***********************************************
-    //***********************************************
 
+    //***********************************************
+    //***********************************************
     function init() {
+        //** Drawing the dots and arcs **//
         var origin = {
             'Latitude': 91,
             'Longitude': 181
@@ -1284,14 +1299,85 @@
             'Longitude': 181
         };
         for (var i = 0; i < RouteItems.length; ++i) {
-            if (RouteItems[i].Latitude != "" && RouteItems[i].Longitude != "") {
+            Rank(RouteItems[i]);
+
+
+            var table=document.getElementById("routesummarytable"); //get the summary table
+            var tr=document.createElement("tr"); //create a new row
+            var td0=document.createElement("td"); //create cell for NodeIP
+            var td1=document.createElement("td"); //create cell for CountryName
+            td1.style.background=RouteItems[i].ClassificationColor;;
+            var td3=document.createElement("td"); //Create cell for "Read more..."
+            var td4=document.createElement("td"); //Create cell for comments
+            var td5=document.createElement("td"); //Create cell for color
+
+            td0.innerHTML=RouteItems[i].NodeIP; //fill NodeIP
+            td1.innerHTML=RouteItems[i].CountryName + (RouteItems[i].City ? (', ' + RouteItems[i].City) : ''); //Fill CountryName
+            if(RouteItems[i].CountryName=="Reserved")
+            {
+                td1.innerHTML+='<sup><a style="cursor:pointer;" onclick="scrolltofootnotes();">2</a></sup>';
+            }
+            //td2.innerHTML=RouteItems[i].Classification; //Fill Classification
+            //td3.innerHTML='<a href="'+RouteItems[i].BubbleLink+'">Read more...</a>';//Fill Read more line
+            td3.innerHTML='<a href="http://www.privacyinternational.org/">Read more...</a>';//Fill Read more line
+            td5.style.background="#0000ff";
+            //Filling comments
+            if(RouteItems[i].Comment=="Sender") //If this is the first marker,...
+            {
+                var nostr=document.getElementById("nosender_tr");
+                nostr.parentNode.removeChild(nostr);
+                td4.innerHTML="Sender"; //then it's the sender
+                td5.style.background="#00ffff";
+            }
+            else if(i+1==RouteItems.length) //If it's the last,...
+            {
+                td4.innerHTML="Receiver"; //it is the receiver
+                td5.style.background="#C200AB";
+            }
+
+            //Adding Cells to Row
+            tr.appendChild(td0);
+            tr.appendChild(td1);
+            //tr.appendChild(td2);
+            //tr.appendChild(td3);
+            tr.appendChild(td5);
+            tr.appendChild(td4);
+            tr.setAttribute("class","d"+i%2);
+            table.appendChild(tr); //Adding Row to Table
+            //End Filling
+
+
+            //Setting the color of the dot
+            var color = 'defaultDot';
+            var size = 3;
+            if(RouteItems[i].Comment=="Sender") {
+                color = "sender";
+                size = 5;
+            }
+            else if(i+1==RouteItems.length) {
+                color = "receiver";
+                size = 5;
+            }
+
+            if (RouteItems[i].Code != '') {
+                choroplethString +=
+                    RouteItems[i].Code + ': {' +
+                    'fillColor: \'' + RouteItems[i].ClassificationColor + '\', ' +
+                    'country: \'' + RouteItems[i].CountryName + '\', ' +
+                    'dr: \'' + RouteItems[i].DataRet + '\', ' +
+                    'wr: \'' + RouteItems[i].Warrantless + '\' ' +
+                    '},\n';
+
+
                 bubblesString +=
                     '{\n' +
+                    'name: \''  + (RouteItems[i].City != "" ? RouteItems[i].City : "reserved") + '\',\n' +
                     'latitude: ' + RouteItems[i].Latitude + ',\n' +
                     'longitude: ' + RouteItems[i].Longitude + ',\n' +
-                    'radius: 3' + ',\n' +
-                    'fillKey: \'black\'\n' +
+                    'radius: \'' + size + '\',\n' +
+                    'fillKey: \'' + color + '\'\n' +
                     '},\n';
+
 
                 if (origin.Latitude > 90) {
                     origin = RouteItems[i];
@@ -1311,20 +1397,85 @@
                     '},\n';
                 origin = destination;
 
+
+
+                ////-
+                td1.setAttribute("countryname",RouteItems[i].CountryName);
+                td1.setAttribute("dataret",RouteItems[i].DataRet);
+                td1.setAttribute("warrantless",RouteItems[i].Warrantless);
+                td1.setAttribute("bubblelink",RouteItems[i].BubbleLink);
+                td1.setAttribute("classrank",RouteItems[i].ClassificationRank);
+                td1.setAttribute("datarettext",RouteItems[i].DataRetText);
+                td1.setAttribute("warrantlesstext",RouteItems[i].WarrantlessText);
+                td1.addEventListener("mouseover",countryOver,true);
+                td1.addEventListener("click",countryClick,true);
+                td1.addEventListener("mousemove",countryMove,true);
+                td1.addEventListener("mouseout",countryOut,true);
+                ////-
             }
         }
 
+        //Closing the strings with the appropriate fromat
         bubblesString += ']);';
         arcString += '], { strokeWidth: 2,\n' +
             '         greatArc: true}\n' +
             '    );';
+        choroplethString += '});';
 
+
+        //** Adding map bubbles and arcs strings before the next element in the HTML document **//
         var mapdata = document.createElement("script");
         mapdata.id = 'mapdata';
-        mapdata.innerHTML = bubblesString + '\n' + arcString;
+        mapdata.innerHTML = bubblesString + '\n' + arcString + '\n' + choroplethString;
         var thisElement = document.getElementById('main');
         var parentElement = thisElement.parentNode;
         parentElement.insertBefore(mapdata, thisElement.nextSibling);
+
+
+        ////
+        //if(browser.msie||browser.opera)
+        if(browser.msie && parseFloat(browser.version) < 9.0)
+        ////
+        {
+            alert("< IE 9.0");
+        }
+        else
+        {
+            var iewarning=document.getElementById("iewarning");
+            iewarning.parentNode.removeChild(iewarning);
+            ////
+            //if(browser.mozilla)
+            if(browser.mozilla || browser.opera)
+            ////
+            {
+                //alert("FF");
+                //drop webkit div
+                var forwebkitdiv=document.getElementById("forwebkit");
+                forwebkitdiv.parentNode.removeChild(forwebkitdiv);
+                ////
+                //console.log(document.getElementById("svgobject"));
+                //svgimage= document.getElementById("svgobject").contentDocument.activeElement;
+                //slidero=document.getElementById("sliderobject").contentDocument;
+//                svgimage = document.getElementById("svgMap");
+                slidero = document.getElementById("sliderobjectwk");
+                ////
+                polygons=svgimage.children;
+            }
+            else if(browser.chrome || browser.safari || browser.msie)
+            {
+                //alert("WK");
+                //drop FF div
+                var forfirefoxdiv=document.getElementById("forfirefox");
+                forfirefoxdiv.parentNode.removeChild(forfirefoxdiv);
+//                svgimage= document.getElementById("svgobjectwk");
+                slidero=document.getElementById("sliderobjectwk");
+//                polygons=svgimage.childNodes;
+            }
+            else
+            {
+                alert("Unknown Browser");
+            }
+        }
 
     }
     //*******************END*************************

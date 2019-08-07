@@ -22,7 +22,7 @@
         type="menu-button"
         label="Path Visualize"
         class="toolbarbutton-1 msgHeaderView-button hdrPathVisualizeButton"
-        image="chrome://epvp/skin/icon64p.png"
+        image="chrome://epvp/skin/icon19p.png"
         oncommand="runEPVP();">
         <!-- ////- -->
             <menupopup>
