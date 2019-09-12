@@ -8593,6 +8593,11 @@
             border: 2px dotted rgba(0, 0, 0, 0.5);
             padding: 6px;
         }
+
+        .credits {
+            text-align: justify;
+            font-size: 11px;
+        }
         /* ---------------------------------------------------------------*/
         h3 {
             text-align: center;
@@ -8743,13 +8748,13 @@
         <div class="symbols" id="symbols">
             <table id="symbolstable">
                 <tr><td id="class2">
-                    <table><tr><td style="background-color:rgba(0,104,0,0.95);"></td><td style="border:none;">Respected<sup><a style="cursor:pointer;" onclick='scrolltofootnotes();'>1</a></sup></td></tr></table>
+                    <table><tr><td style="background-color:rgba(0,135,0,0.95);"></td><td style="border:none;">Respected<sup><a style="cursor:pointer;" onclick='scrolltofootnotes();'>1</a></sup></td></tr></table>
                 </td></tr>
                 <tr><td id="class1">
                     <table><tr><td style="background-color:rgba(222,222,0,0.9);"></td><td style="border:none;">Partial Interference</td></tr></table>
                 </td></tr>
                 <tr><td id="class0">
-                    <table><tr><td style="background-color:rgba(140,0,0,0.87);"></td><td style="border:none;">Not respected</td></tr></table>
+                    <table><tr><td style="background-color:rgba(180,0,0,0.87);"></td><td style="border:none;">Not respected</td></tr></table>
                 </td></tr>
             </table>
         </div>
@@ -8819,7 +8824,7 @@
                     setProjection: function(element) {
                         var projection = d3.geo.equirectangular()
                                 .center([centerlon, centerlat])
-                                .scale( 39577.412 / Math.sqrt((latmax-latmin)*(latmax-latmin) + (lonmax-lonmin)*(lonmax-lonmin)) )
+                                .scale( 29000 / Math.sqrt((latmax-latmin)*(latmax-latmin) + (lonmax-lonmin)*(lonmax-lonmin)) )
                                 .translate([element.offsetWidth / 2, element.offsetHeight / 2]);
 
                         var path = d3.geo.path().projection(projection);
@@ -8901,6 +8906,11 @@
                 <sup>2</sup> Reserved IP adresses have no known location, thus can't be drawn on the map.
             </div>
 
+        </div>
+        <div class = "credits">
+            <p>
+                This extension includes IP Geolocation data available from <a href="http://ip-api.com/">http://ip-api.com/</a>.
+            </p>
         </div>
     </div>
     <!-- Footer End -->
@@ -9002,7 +9012,7 @@
     function Rank(ri) {
         if(ri.Warrantless==true)
         {
-            ri.ClassificationColor="rgba(140,0,0,0.87)";
+            ri.ClassificationColor="rgba(180,0,0,0.87)";
             ri.ClassificationRank=0;
         }
         else if(ri.DataRet==true)
@@ -9012,7 +9022,7 @@
         }
         else
         {
-            ri.ClassificationColor="rgba(0,104,0,0.95)";
+            ri.ClassificationColor="rgba(0,135,0,0.95)";
             ri.ClassificationRank=2;
         }
     }

@@ -16,6 +16,23 @@ function LOG(text) {
 
 function Ip(attributes) {
 
+    this.httpGet = function (theUrl) {
+        if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+            xmlhttp = new XMLHttpRequest();
+        }
+        else {// code for IE6, IE5
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                return xmlhttp.responseText;
+            }
+        };
+        xmlhttp.open("GET", theUrl, false );
+        xmlhttp.send();
+        return xmlhttp.responseText;
+    };
+
 	//copy attributes
 	for (var i in attributes) {
 		this[i] = attributes[i];
@@ -50,36 +67,18 @@ function Ip(attributes) {
         dbConnection = dbService.openDatabase(dbFile);
     }
 
-    ////-
-    //var statement = dbConnection.createStatement("SELECT * FROM ip LEFT JOIN country country ON country.id = ip.country WHERE ip <= :ip ORDER BY ip DESC LIMIT 1");
-    try {
-    var statement = dbConnection.createStatement("SELECT * FROM ip JOIN location ON location.id = ip.locationid JOIN country ON country.code = location.countrycode WHERE :ip BETWEEN ipStart AND ipEnd LIMIT 1");
-    } catch (e) { LOG(e); }
-    ////-
-    
-    //split ip to bytes
-    var ipbytes = this.ip.split('.');
+    //Get location from IP address
+    var ipDataQuery = "http://ip-api.com/csv/"+ this.ip + "?fields=status,countryCode,city,lat,lon";
+    let ipDataString = this.httpGet(ipDataQuery);
+    var ipData = ipDataString.split(',');
 
-    //calculate ip code
-    this.ipcode = ((ipbytes[0] * 256 + ipbytes[1] * 1) * 256 + ipbytes[2] * 1) * 256 + ipbytes[3] * 1;
-    statement.params.ip = this.ipcode;
-
-    //execute query
-    var res = statement.executeStep();
-
+    this.Comment = "";
     this.BubbleLink = 'bubblelink';
     this.NodeIP = this.ip;
-    ////-
-    if (res && statement.row.countryname) {
-        this.CountryName = statement.row.countryname;
-        this.Code = statement.row.alpha3code;
-        this.City = statement.row.city;
-        this.Latitude = statement.row.latitude;
-        this.Longitude = statement.row.longitude;
-        this.DataRet = statement.row.dataretention == '1' ? true : false;
-        this.Warrantless = statement.row.warrantless == '1' ? true : false;
-        this.DataRetText = statement.row.dataretentiontext;
-        this.WarrantlessText = statement.row.warrantlesstext;
+    if (ipData[0] == "success") {
+        this.City = ipData[2];
+        this.Latitude = ipData[3];
+        this.Longitude = ipData[4];
     } else {
         this.CountryName = "Reserved";
         this.Code = '';
@@ -90,18 +89,29 @@ function Ip(attributes) {
         this.Warrantless = true;
         this.DataRetText = '';
         this.WarrantlessText = '';
+        return this;
     }
+
     ////-
-	this.Comment = '';
+    //var statement = dbConnection.createStatement("SELECT * FROM ip LEFT JOIN country country ON country.id = ip.country WHERE ip <= :ip ORDER BY ip DESC LIMIT 1");
+    try {
+    var statement = dbConnection.createStatement("SELECT * FROM country WHERE :countrycode = country.code");
+    } catch (e) { LOG(e); }
+    ////-
 
-//    this.CityName = statement.row.cityname;
-//    this.BubbleText = 'bubbletext';
-//    this.NodeName = 'nodename';
+    //execute query
+    statement.params.countrycode = ipData[1];
+    var res = statement.executeStep();
 
-//    this.Classification = 'classification';
-//    this.ClassificationDescription = 'classdescr';
-//    this.ClassificationColor = '#222222';
-//    this.ClassificationRank = 0;
+    ////-
+    if (res) {
+        this.CountryName = statement.row.countryname;
+        this.Code = statement.row.alpha3code;
+        this.DataRet = statement.row.dataretention == '1' ? true : false;
+        this.Warrantless = statement.row.warrantless == '1' ? true : false;
+        this.DataRetText = statement.row.dataretentiontext;
+        this.WarrantlessText = statement.row.warrantlesstext;
+    }
 
     return this;
 }

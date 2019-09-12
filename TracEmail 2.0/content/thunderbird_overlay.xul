@@ -30,7 +30,7 @@
         <toolbarbutton
              id="epvpVisualizePathReply"
              type="button"
-             label="Reply with Path Visualize"
+             label="Reply with Path"
              class="menuitem-iconic hdrReplyButton"
              oncommand="runEPVP(1); event.stopPropagation();" >
         </toolbarbutton>

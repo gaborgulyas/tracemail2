@@ -15,5 +15,12 @@
     "options": {
       "page": "chrome://epvp/content/options.xul"
     }
+  },
+
+  "author": "Tamas Besenyei",
+
+  "icons": {
+    "32": "skin/icon32p.png",
+    "64": "skin/icon64p.png"
   }
 }
